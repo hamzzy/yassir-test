@@ -12,4 +12,4 @@ RUN yarn install
 # Copy the rest of the application to the working directory
 COPY . .
 
-RUN npx yarn start:dev
+CMD ["yarn","start:dev"]
