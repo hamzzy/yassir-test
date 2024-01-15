@@ -8,6 +8,7 @@ import { GlobalExceptionFilter } from './common/filters/global-exception.filter'
 import { MongooseModule } from '@nestjs/mongoose';
 import { ScheduleModule } from '@nestjs/schedule';
 import * as Joi from 'joi'
+import { LoggerModule } from 'nestjs-pino';
 @Module({
   imports: [
   
@@ -20,6 +21,18 @@ import * as Joi from 'joi'
         REDIS_HOST: Joi.string().required(),
         REDIS_PORT: Joi.number().required(),
       }),
+    }),
+    LoggerModule.forRoot({
+      pinoHttp: {
+        transport: {
+          target: 'pino-pretty',
+          options: {
+            singleLine: true,
+            colorize: true,
+
+          },
+        },
+      },
     }),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
@@ -45,14 +58,3 @@ import * as Joi from 'joi'
   },],
 })
 export class AppModule {}
-
-//ConfigModule.forRoot({
-  //   load: [configuration],
-  //   validationSchema: Joi.object({
-  //     DB_NAME: Joi.string(),
-  //     DB_HOST: Joi.string(),
-  //     DB_PORT: Joi.number().default(1433),
-  //     DB_USER: Joi.string(),
-  //     DB_PASSWORD: Joi.string(),
-  //   }),
-  // }),

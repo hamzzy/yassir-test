@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { AirQualityQueryDto } from './dto/query-airquality.dto';
 import { IQRIClient } from 'src/utils/BaseClient';
 import { AirQualityResult } from './interfaces/airquality-result.interface';
@@ -12,6 +12,7 @@ import { Model } from 'mongoose';
 @Injectable()
 export class AirqualityService {
 
+  private readonly logger = new Logger(AirqualityService.name);
   constructor(@InjectModel(Airquality.name) private airqualityModel: Model<AirqualityDocument>) {}
 
   async getAirQuality (airQualityQuery: AirQualityQueryDto): Promise<AirQualityResult | null> {
@@ -55,25 +56,28 @@ export class AirqualityService {
     if( pollutionData){
       const create=new this.airqualityModel(pollutionData)
       create.save();
-      console.log(create)
-      console.log("done !!!!")
+      this.logger.log(`Paris air Quality Data saved`);
     }
-    console.log(pollutionData)
-
-  
+    this.logger.log('Paris data saved',pollutionData);
    }catch (error) {
-
+    this.logger.error(`Error ${error.message}`);
     throw new Error('couldnt save data');
 
    }
 
-
     }
 
 
-    async getMostPollutedDatetime(): Promise<any> {
-      const mostPollutedRecord = await this.airqualityModel.findOne().sort({ aqius: -1, aqicn: -1 }).limit(1);
-      return mostPollutedRecord.toJSON()
+    async getMostPollutedDatetime(): Promise<Date | any> {
+      const mostPollutedRecord = await this.airqualityModel
+      .findOne()
+      .sort({ aqius: -1, aqicn: -1 })
+      .limit(1);
+      if ( mostPollutedRecord){
+      const [date, time] = mostPollutedRecord['created'].toLocaleString().split(' '); 
+      return {"date": date,"time": time}
+      }
+      return {}
     }
 
 }

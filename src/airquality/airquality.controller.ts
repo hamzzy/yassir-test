@@ -27,6 +27,6 @@ export class AirqualityController {
   @Get('most-polluted-datetime')
   async getMostPollutedDatetime() {
     const datetime = await this.airqualityService.getMostPollutedDatetime();
-    return {"date_time":datetime.created}
+    return datetime
   }
 }
