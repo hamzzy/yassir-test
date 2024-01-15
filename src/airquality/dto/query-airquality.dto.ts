@@ -1,17 +1,19 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
+  IsLatitude,
+  IsLongitude,
   IsNotEmpty,
-  IsString,
+
 } from 'class-validator';
 
 export class AirQualityQueryDto {
   @ApiProperty()
   @IsNotEmpty()
-  @IsString()
-  latitude = '';
+  @IsLatitude()
+  latitude: number;
 
   @ApiProperty()
   @IsNotEmpty()
-  @IsString()
-  longitude = '';
+  @IsLongitude()
+  longitude: number;
 }

@@ -19,4 +19,14 @@ export class AirqualityController {
   async getAirQualityIndex(@Query() airQualityQuery: AirQualityQueryDto): Promise<AirQualityResult> {
     return await this.airqualityService.getAirQuality(airQualityQuery);
   }
+
+  @ApiResponse({
+    description:
+      'To get most pollate air in france',
+  })
+  @Get('most-polluted-datetime')
+  async getMostPollutedDatetime() {
+    const datetime = await this.airqualityService.getMostPollutedDatetime();
+    return {"date_time":datetime.created}
+  }
 }

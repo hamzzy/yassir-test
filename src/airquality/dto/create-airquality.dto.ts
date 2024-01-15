@@ -1,1 +1,4 @@
-export class CreateAirqualityDto {}
+export class CreateAirqualityDto {
+
+    
+}

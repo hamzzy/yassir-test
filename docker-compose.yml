@@ -13,27 +13,25 @@ services:
   #   depends_on:
   #     db:
   #       condition: service_healthy
-
-  db:
+  mongo:
+    container_name: mongo-db
     image: mongo:latest
-    env_file:
-      - .env
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_DATABASE}
     ports:
-      - "27017:27017"
-    volumes:
-      - mongodb_data_container:/data/db
+      - '27017:27017'
 
   redis:
     container_name: cache
-    image: redis
+    image: "redis:alpine"
     ports:
       - 6379:6379
     volumes:
       - redis:/data
-volumes:
-  mongodb_data_container:
-  redis:
-    driver: local
+
+
 
 
 
