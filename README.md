@@ -32,9 +32,6 @@ MONGO_HOST=mongo
 # IQAir API Configuration
 IQAIR_API_KEY=your_iqair_api_key
 
-# Redis Configuration (for caching)
-REDIS_HOST=redis
-REDIS_PORT=6379
 ```
 
 ## API Endpoints
@@ -67,7 +64,6 @@ docker-compose down
 
 - **Air Quality App**: Runs on port 3000
 - **MongoDB**: Runs on port 27017
-- **Redis**: Runs on port 6379 (for caching)
 
 ## Development
 
@@ -77,13 +73,13 @@ The application uses volume mounting, so any changes you make to the source code
 
 ```bash
 # Unit tests
-yarn test
+npm test
 
 # e2e tests
-yarn test:e2e
+npm test:e2e
 
 # Test coverage
-yarn test:cov
+npm test:cov
 ```
 
 ## API Documentation
