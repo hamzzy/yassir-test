@@ -4,6 +4,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    container_name: airquality-app
     ports:
       - '3000:3000'
     volumes:
@@ -11,9 +12,14 @@ services:
       - /app/node_modules
     env_file:
       - .env
+    environment:
+      - MONGO_HOST=mongo
     depends_on:
       mongo:
         condition: service_healthy
+    networks:
+      - airquality-network
+    restart: unless-stopped
 
   mongo:
     container_name: mongo-db
@@ -24,12 +30,24 @@ services:
       MONGO_INITDB_DATABASE: ${MONGO_DATABASE}
     ports:
       - '27017:27017'
+    volumes:
+      - mongo-data:/data/db
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 10s
       timeout: 10s
       retries: 5
       start_period: 40s
+    networks:
+      - airquality-network
+    restart: unless-stopped
+
+networks:
+  airquality-network:
+    driver: bridge
+
+volumes:
+  mongo-data:
 
 
 

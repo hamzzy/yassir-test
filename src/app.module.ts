@@ -11,13 +11,14 @@ import * as Joi from 'joi'
 import { LoggerModule } from 'nestjs-pino';
 @Module({
   imports: [
-  
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: Joi.object({
         MONGO_USERNAME: Joi.string().required(),
         MONGO_PASSWORD: Joi.string().required(),
         MONGO_DATABASE: Joi.string().required(),
+        IQAIR_API_KEY: Joi.string().required(),
+        IQAIR_API_URL: Joi.string().default('http://api.airvisual.com/v2'),
       }),
     }),
     LoggerModule.forRoot({
@@ -27,7 +28,6 @@ import { LoggerModule } from 'nestjs-pino';
           options: {
             singleLine: true,
             colorize: true,
-
           },
         },
       },
@@ -39,20 +39,26 @@ import { LoggerModule } from 'nestjs-pino';
         const password = configService.get('MONGO_PASSWORD');
         const database = configService.get('MONGO_DATABASE');
         const host = configService.get('MONGO_HOST');
- 
+        
+        const uri = `mongodb://${username}:${password}@${host}/${database}?authSource=admin`;
+        
         return {
-          uri: `mongodb://${username}:${password}@${host}`,
+          uri,
           dbName: database,
         };
       },
       inject: [ConfigService],
     }),
     ScheduleModule.forRoot(),
-   AirqualityModule],
+    AirqualityModule
+  ],
   controllers: [AppController],
-  providers: [AppService, {
-    provide: APP_FILTER,
-    useClass: GlobalExceptionFilter,
-  },],
+  providers: [
+    AppService, 
+    {
+      provide: APP_FILTER,
+      useClass: GlobalExceptionFilter,
+    },
+  ],
 })
 export class AppModule {}
