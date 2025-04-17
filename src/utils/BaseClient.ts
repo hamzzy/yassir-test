@@ -1,6 +1,8 @@
+import { Logger } from '@nestjs/common';
 import axios, { AxiosResponse, AxiosError } from 'axios';
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
+const logger = new Logger('IQRIClient');
 
 export async function IQRIClient<T>(
   method: HttpMethod,
@@ -8,8 +10,19 @@ export async function IQRIClient<T>(
   params?: Record<string, any>,
 ): Promise<T> {
   try {
-    const url = `${process.env.IQAIR_API_URL}${endpoint}`;
-    const apiKey = process.env.IQAIR_API_KEY;    
+    // Construct the base URL for the IQAir API
+    const baseUrl = process.env.IQAIR_API_URL || 'http://api.airvisual.com/v2';
+    const url = `${baseUrl}/${endpoint}`;
+    
+    // Get API key from environment variables
+    const apiKey = process.env.IQAIR_API_KEY?.trim();
+    
+    if (!apiKey) {
+      logger.error('IQAir API key is not configured');
+      throw new Error('IQAir API key is not configured');
+    }
+    
+    // Prepare request options
     const options = {
       method,
       url,
@@ -18,32 +31,70 @@ export async function IQRIClient<T>(
         'Content-Type': 'application/json',
         Accept: 'application/json',
       },
+      timeout: 10000, // 10 second timeout
     };
 
+    logger.debug(`Making request to IQAir API: ${url}`, { 
+      method,
+      params: { ...params, key: '[REDACTED]' } // Don't log the actual API key
+    });
+    
+    // Make the request
     const response: AxiosResponse<T> = await axios(options);
-    return response.data;
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      handleAxiosError(error);
+    
+    // Check if the response has the expected structure
+    if (response.data && typeof response.data === 'object') {
+      logger.debug('IQAir API response received successfully', {
+        status: response.status,
+        statusText: response.statusText
+      });
+      return response.data;
     } else {
-      console.error('Unexpected error:', error.message);
-      throw new Error('Unexpected error occurred.');
+      logger.error('Unexpected response format from IQAir API', {
+        data: response.data
+      });
+      throw new Error('Unexpected response format from IQAir API');
     }
-  }
-}
-
-function handleAxiosError(error: AxiosError) {
-  if (error.response) {
-    // The request was made and the server responded with a status code
-    console.error('Response data:', error.response.data);
-    throw new Error(`Request failed with status code ${error.response.data}`);
-  } else if (error.request) {
-    // The request was made but no response was received
-    console.error('Request made but no response received');
-    throw new Error('No response received from the server.');
-  } else {
-    // Something happened in setting up the request that triggered an Error
-   // console.error('Error setting up the request:', error.message);
-    throw new Error(`Error setting up the request.'${error.message}`);
+  } catch (error) {
+    // Handle Axios errors
+    if (axios.isAxiosError(error)) {
+      const axiosError = error as AxiosError;
+      
+      if (axiosError.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        logger.error(`IQAir API error: ${axiosError.response.status}`, {
+          data: axiosError.response.data,
+          status: axiosError.response.status,
+          headers: axiosError.response.headers,
+        });
+        
+        // Return the error response data if available
+        if (axiosError.response.data) {
+          return axiosError.response.data as T;
+        }
+        
+        throw new Error(`IQAir API error: ${axiosError.response.status} - ${axiosError.response.statusText}`);
+      } else if (axiosError.request) {
+        // The request was made but no response was received
+        logger.error('No response received from IQAir API', {
+          request: {
+            method: axiosError.request.method,
+            url: axiosError.request.url,
+          }
+        });
+        throw new Error('No response received from IQAir API - request timed out or network error');
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        logger.error(`Error setting up request to IQAir API: ${axiosError.message}`);
+        throw new Error(`Error setting up request to IQAir API: ${axiosError.message}`);
+      }
+    } else {
+      // Handle non-Axios errors
+      logger.error(`Unexpected error in IQRIClient: ${error.message}`, {
+        error: error
+      });
+      throw error;
+    }
   }
 }

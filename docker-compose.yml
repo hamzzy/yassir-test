@@ -1,18 +1,20 @@
 version: '3.8'
 services:
-  # airquality-app:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - '3000:3000'
-  #   volumes:
-  #     - ./:/app
-  #     - /app/node_modules
-  #   # command: sh -c "chmod a+x ./start-app.sh && ./start-app.sh"
-  #   depends_on:
-  #     db:
-  #       condition: service_healthy
+  airquality-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - '3000:3000'
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    env_file:
+      - .env
+    depends_on:
+      mongo:
+        condition: service_healthy
+
   mongo:
     container_name: mongo-db
     image: mongo:latest
@@ -22,14 +24,13 @@ services:
       MONGO_INITDB_DATABASE: ${MONGO_DATABASE}
     ports:
       - '27017:27017'
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
 
-  redis:
-    container_name: cache
-    image: "redis:alpine"
-    ports:
-      - 6379:6379
-    volumes:
-      - redis:/data
 
 
 

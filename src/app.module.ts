@@ -18,8 +18,6 @@ import { LoggerModule } from 'nestjs-pino';
         MONGO_USERNAME: Joi.string().required(),
         MONGO_PASSWORD: Joi.string().required(),
         MONGO_DATABASE: Joi.string().required(),
-        REDIS_HOST: Joi.string().required(),
-        REDIS_PORT: Joi.number().required(),
       }),
     }),
     LoggerModule.forRoot({
